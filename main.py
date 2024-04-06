@@ -1,11 +1,10 @@
-import tkinter as tk
 from tkinter import ttk, messagebox
+import tkinter as tk
+from tkinter import messagebox
 import sqlite3
 import random
 import string
 import os
-import win32print
-import win32ui 
 
 # Database initialization
 db_path = 'data/database.sqlite'
@@ -14,6 +13,41 @@ if not os.path.exists(db_path):
 
 conn = sqlite3.connect(db_path)
 
+
+def initialize_database():
+    '''
+    This function creates a table in the database if it does not exist
+
+    Returns:
+    str: Ok
+    '''
+
+    # create table inside executescript function
+    conn.executescript('''
+        CREATE TABLE IF NOT EXISTS vehicle_data (
+            vehicle_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vehicle_type CHAR(50) NOT NULL,
+            vehicle_model INTEGER,
+            license_id CHAR(6) NOT NULL,
+            code_permit CHAR(8) NOT NULL,
+            checked_in DATETIME,
+            checked_out DATETIME
+        );
+        
+        CREATE TABLE IF NOT EXISTS members (
+            member_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            member_name CHAR(50) NOT NULL,
+            member_model INTEGER NOT NULL,
+            member_vehicle_type CHAR(50) NOT NULL,
+            member_license_id CHAR(6) NOT NULL,            
+            paid BOOLEAN,
+            FOREIGN KEY (member_license_id) REFERENCES vehicle_data(license_id)
+        );        
+        
+        
+        ''')
+    conn.commit()
+    
 # Create Tkinter window
 root = tk.Tk()
 root.title("Vehicle Management System")
@@ -44,79 +78,9 @@ def check_in(vehicle_type, vehicle_model, license_id):
     except sqlite3.Error as e:
         return f"Error inserting data: {e}"
 ###
-# Function to print information
-def print_information(vehicle_type, vehicle_model, license_id, code_permit):
-    printer_name = win32print.GetDefaultPrinter()  # Get the default printer
-    hprinter = win32print.OpenPrinter(printer_name)
-    hdc = win32ui.CreateDC()
-    hdc.CreatePrinterDC(printer_name)
-    hdc.StartDoc("Vehicle Information")
-    hdc.StartPage()
 
-    # Format the information to print
-    text_to_print = f"Check-in Information:\nVehicle Type: {vehicle_type}\nVehicle Model: {vehicle_model}\nLicense ID: {license_id}\nCode Permit: {code_permit}"
-
-    hdc.TextOut(100, 100, text_to_print)
-
-    hdc.EndPage()
-    hdc.EndDoc()
-    hdc.DeleteDC()
-    win32print.ClosePrinter(hprinter)
-
-# GUI functions for each page
-
-# Function for check-in page
-def check_in_vehicle():
-    vehicle_type = vehicle_type_entry.get()
-    vehicle_model = vehicle_model_entry.get()
-    license_id = license_id_entry.get()
-    result = check_in(vehicle_type, vehicle_model, license_id)
-    messagebox.showinfo("Check-in Status", result)
-
-    # Automatically print the check-in information after check-in
-    print_information(vehicle_type, vehicle_model, license_id, generate_random_code())
-
-# Create frames for each page
-check_in_frame = ttk.Frame(notebook)
-check_out_frame = ttk.Frame(notebook)
-search_frame = ttk.Frame(notebook)
-subscribe_frame = ttk.Frame(notebook)
-
-# Add frames to the notebook with corresponding titles
-notebook.add(check_in_frame, text="Check-in Vehicle")
-# notebook.add(check_out_frame, text="Check-out Vehicle")
-# notebook.add(search_frame, text="Search Vehicle")
-# notebook.add(subscribe_frame, text="Subscribe Member")
-
-vehicle_type_label = ttk.Label(check_in_frame, text="Vehicle Type:")
-vehicle_type_label.grid(row=0, column=0, padx=5, pady=5)
-vehicle_type_entry = ttk.Entry(check_in_frame)
-vehicle_type_entry.grid(row=0, column=1, padx=5, pady=5)
-
-vehicle_model_label = ttk.Label(check_in_frame, text="Vehicle Model:")
-vehicle_model_label.grid(row=1, column=0, padx=5, pady=5)
-vehicle_model_entry = ttk.Entry(check_in_frame)
-vehicle_model_entry.grid(row=1, column=1, padx=5, pady=5)
-
-license_id_label = ttk.Label(check_in_frame, text="License ID:")
-license_id_label.grid(row=2, column=0, padx=5, pady=5)
-license_id_entry = ttk.Entry(check_in_frame)
-license_id_entry.grid(row=2, column=1, padx=5, pady=5)
-
-check_in_button = ttk.Button(check_in_frame, text="Check-in", command=check_in_vehicle)
-check_in_button.grid(row=3, columnspan=2, padx=5, pady=5)
-
-# Button to print check-in information
-def print_check_in_info():
-    vehicle_type = vehicle_type_entry.get()
-    vehicle_model = vehicle_model_entry.get()
-    license_id = license_id_entry.get()
-    code_permit = generate_random_code()  # Generate code permit for printing
-    print_information(vehicle_type, vehicle_model, license_id, code_permit)
-
-print_button = ttk.Button(check_in_frame, text="Print Check-in Info", command=print_check_in_info)
-print_button.grid(row=4, columnspan=2, padx=5, pady=5)
 ###
+
 
 # Function to perform check-out operation
 def check_out(code_permit):
@@ -262,5 +226,11 @@ paid_entry.grid(row=4, column=1, padx=5, pady=5)
 subscribe_button = ttk.Button(subscribe_frame, text="Subscribe", command=subscribe_member)
 subscribe_button.grid(row=5, columnspan=2, padx=5, pady=5)
 
+
+
 # Run Tkinter main loop
-root.mainloop()
+
+if __name__ == '__main__':
+    initialize_database()
+    root.mainloop()
+    print(f'data initialization: Ok')
