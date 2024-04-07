@@ -1,1 +1,1 @@
-Idk I also ask ai
+Download Tableplus to view database
