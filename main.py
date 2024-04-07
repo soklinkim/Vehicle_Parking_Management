@@ -57,6 +57,8 @@ root.geometry("600x300")
 notebook = ttk.Notebook(root)
 notebook.pack(fill=tk.BOTH, expand=True)
 
+
+
 # Functions for database operations
 
 # Function to generate a random code
