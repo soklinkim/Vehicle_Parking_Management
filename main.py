@@ -25,19 +25,21 @@ def initialize_database():
     # create table inside executescript function
     conn.executescript('''
         CREATE TABLE IF NOT EXISTS vehicle_data (
-            vehicle_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vehicle_No INTEGER PRIMARY KEY AUTOINCREMENT,
             vehicle_type CHAR(50) NOT NULL,
             vehicle_model INTEGER,
             license_id CHAR(6) NOT NULL,
             code_permit CHAR(8) NOT NULL,
             checked_in DATETIME,
-            checked_out DATETIME
+            checked_out DATETIME,
+            member BOOLEAN,
+            FOREIGN KEY (member) REFERENCES members(paid)
         );
         
         CREATE TABLE IF NOT EXISTS members (
-            member_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            member_No INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             member_name CHAR(50) NOT NULL,
-            member_model INTEGER NOT NULL,
+            member_vehicle_model INTEGER NOT NULL,
             member_vehicle_type CHAR(50) NOT NULL,
             member_license_id CHAR(6) NOT NULL,            
             paid BOOLEAN,
@@ -110,17 +112,29 @@ def search(license_id=''):
         return "Not Found"
 
 # Function to perform subscription operation
-def subscription(member_name, member_license_id, member_model, member_vehicle_type, paid):
+# Function to perform subscription operation
+def subscription(member_name, member_license_id, member_vehicle_model, member_vehicle_type, paid):
     try:
         command = f'''
-        INSERT INTO members (member_name, member_license_id, member_model, member_vehicle_type, paid)
-        VALUES ('{member_name}', '{member_license_id}', {member_model}, '{member_vehicle_type}', {paid})
+        INSERT INTO members (member_name, member_license_id, member_vehicle_model, member_vehicle_type, paid)
+        VALUES ('{member_name}', '{member_license_id}', {member_vehicle_model}, '{member_vehicle_type}', {paid})
         '''
         conn.execute(command)
         conn.commit()
+        
+        # Update the vehicle_data table to set member field to 1 for the corresponding license_id
+        command_update_vehicle = f'''
+        UPDATE vehicle_data
+        SET member = 1
+        WHERE license_id = '{member_license_id}'
+        '''
+        conn.execute(command_update_vehicle)
+        conn.commit()
+        
         return "Subscribe Sucessfully!"
     except sqlite3.Error as e:
         return f"Error inserting data: {e}"
+
 
 # Create frames for each page
 check_in_frame = ttk.Frame(notebook)
@@ -136,19 +150,49 @@ notebook.add(subscribe_frame, text="Subscribe Member")
 
 # GUI functions for each page
 
+# # Function for check-in page
+# def check_in_vehicle():
+#     vehicle_type = vehicle_type_entry.get()
+#     vehicle_model = vehicle_model_entry.get()
+#     license_id = license_id_entry.get()
+#     result = check_in(vehicle_type, vehicle_model, license_id)
+#     messagebox.showinfo("Check-in Status", result)
+
+# vehicle_type_label = ttk.Label(check_in_frame, text="Vehicle Type:")
+# vehicle_type_label.grid(row=0, column=0, padx=5, pady=5)
+# vehicle_type_entry = ttk.Entry(check_in_frame)
+# vehicle_type_entry.grid(row=0, column=1, padx=5, pady=5)
+
+# vehicle_model_label = ttk.Label(check_in_frame, text="Vehicle Model:")
+# vehicle_model_label.grid(row=1, column=0, padx=5, pady=5)
+# vehicle_model_entry = ttk.Entry(check_in_frame)
+# vehicle_model_entry.grid(row=1, column=1, padx=5, pady=5)
+
+# license_id_label = ttk.Label(check_in_frame, text="License ID:")
+# license_id_label.grid(row=2, column=0, padx=5, pady=5)
+# license_id_entry = ttk.Entry(check_in_frame)
+# license_id_entry.grid(row=2, column=1, padx=5, pady=5)
+
+# check_in_button = ttk.Button(check_in_frame, text="Check-in", command=check_in_vehicle)
+# check_in_button.grid(row=3, columnspan=2, padx=5, pady=5)
+
 # Function for check-in page
 def check_in_vehicle():
-    vehicle_type = vehicle_type_entry.get()
+    # Get the selected vehicle type from the dropdown
+    vehicle_type = vehicle_type_combobox.get()
     vehicle_model = vehicle_model_entry.get()
     license_id = license_id_entry.get()
     result = check_in(vehicle_type, vehicle_model, license_id)
     messagebox.showinfo("Check-in Status", result)
 
+# Create a dropdown for selecting vehicle type
 vehicle_type_label = ttk.Label(check_in_frame, text="Vehicle Type:")
 vehicle_type_label.grid(row=0, column=0, padx=5, pady=5)
-vehicle_type_entry = ttk.Entry(check_in_frame)
-vehicle_type_entry.grid(row=0, column=1, padx=5, pady=5)
+vehicle_type_combobox = ttk.Combobox(check_in_frame, values=["Car", "Motorbike", "Bicycle"])
+vehicle_type_combobox.grid(row=0, column=1, padx=5, pady=5)
+vehicle_type_combobox.set("Car")  # Set default value to Car
 
+# Other existing GUI elements for check-in page
 vehicle_model_label = ttk.Label(check_in_frame, text="Vehicle Model:")
 vehicle_model_label.grid(row=1, column=0, padx=5, pady=5)
 vehicle_model_entry = ttk.Entry(check_in_frame)
@@ -192,11 +236,12 @@ search_button.grid(row=1, columnspan=2, padx=5, pady=5)
 
 # Function for subscription page
 def subscribe_member():
+
     member_name = member_name_entry.get()
     member_license_id = member_license_id_entry.get()
     member_model = member_model_entry.get()
-    member_vehicle_type = member_vehicle_type_entry.get()
-    paid = paid_entry.get()
+    member_vehicle_type = member_vehicle_type_combobox.get()  # Get selected vehicle type
+    paid = paid_combobox.get()  # Get selected paid status
     result = subscription(member_name, member_license_id, member_model, member_vehicle_type, paid)
     messagebox.showinfo("Subscription Status", result)
 
@@ -217,16 +262,19 @@ member_model_entry.grid(row=2, column=1, padx=5, pady=5)
 
 member_vehicle_type_label = ttk.Label(subscribe_frame, text="Member Vehicle Type:")
 member_vehicle_type_label.grid(row=3, column=0, padx=5, pady=5)
-member_vehicle_type_entry = ttk.Entry(subscribe_frame)
-member_vehicle_type_entry.grid(row=3, column=1, padx=5, pady=5)
+member_vehicle_type_combobox = ttk.Combobox(subscribe_frame, values=["Car", "Motorbike", "Bicycle"])
+member_vehicle_type_combobox.grid(row=3, column=1, padx=5, pady=5)
+member_vehicle_type_combobox.set("Car")  # Set default value to Car
 
 paid_label = ttk.Label(subscribe_frame, text="Paid (True/False):")
 paid_label.grid(row=4, column=0, padx=5, pady=5)
-paid_entry = ttk.Entry(subscribe_frame)
-paid_entry.grid(row=4, column=1, padx=5, pady=5)
+paid_combobox = ttk.Combobox(subscribe_frame, values=["True", "False"])
+paid_combobox.grid(row=4, column=1, padx=5, pady=5)
+paid_combobox.set("True")  # Set default value to True
 
 subscribe_button = ttk.Button(subscribe_frame, text="Subscribe", command=subscribe_member)
 subscribe_button.grid(row=5, columnspan=2, padx=5, pady=5)
+
 
 
 
