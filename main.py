@@ -63,6 +63,7 @@ notebook.pack(fill=tk.BOTH, expand=True)
 
 # Functions for database operations
 
+
 # Function to generate a random code
 def generate_random_code(length=8):
     characters = string.ascii_letters + string.digits
@@ -111,7 +112,7 @@ def search(license_id=''):
         # result = conn.execute(command)
         return "Not Found"
 
-# Function to perform subscription operation
+
 # Function to perform subscription operation
 def subscription(member_name, member_license_id, member_vehicle_model, member_vehicle_type, paid):
     try:
@@ -148,33 +149,10 @@ notebook.add(check_out_frame, text="Check-out Vehicle")
 notebook.add(search_frame, text="Search Vehicle")
 notebook.add(subscribe_frame, text="Subscribe Member")
 
+
+
 # GUI functions for each page
 
-# # Function for check-in page
-# def check_in_vehicle():
-#     vehicle_type = vehicle_type_entry.get()
-#     vehicle_model = vehicle_model_entry.get()
-#     license_id = license_id_entry.get()
-#     result = check_in(vehicle_type, vehicle_model, license_id)
-#     messagebox.showinfo("Check-in Status", result)
-
-# vehicle_type_label = ttk.Label(check_in_frame, text="Vehicle Type:")
-# vehicle_type_label.grid(row=0, column=0, padx=5, pady=5)
-# vehicle_type_entry = ttk.Entry(check_in_frame)
-# vehicle_type_entry.grid(row=0, column=1, padx=5, pady=5)
-
-# vehicle_model_label = ttk.Label(check_in_frame, text="Vehicle Model:")
-# vehicle_model_label.grid(row=1, column=0, padx=5, pady=5)
-# vehicle_model_entry = ttk.Entry(check_in_frame)
-# vehicle_model_entry.grid(row=1, column=1, padx=5, pady=5)
-
-# license_id_label = ttk.Label(check_in_frame, text="License ID:")
-# license_id_label.grid(row=2, column=0, padx=5, pady=5)
-# license_id_entry = ttk.Entry(check_in_frame)
-# license_id_entry.grid(row=2, column=1, padx=5, pady=5)
-
-# check_in_button = ttk.Button(check_in_frame, text="Check-in", command=check_in_vehicle)
-# check_in_button.grid(row=3, columnspan=2, padx=5, pady=5)
 
 # Function for check-in page
 def check_in_vehicle():
