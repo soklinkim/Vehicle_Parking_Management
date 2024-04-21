@@ -88,17 +88,26 @@ def check_in(vehicle_type, vehicle_model, license_plate):
 
 # Function to perform check-out operation
 def check_out(code_permit):
+
     try:
-        command = f'''
-        UPDATE vehicle_data
-        SET checked_out = DATETIME('now')
-        WHERE code_permit = '{code_permit}'
-        '''
-        conn.execute(command)
-        conn.commit()
-        return "Check Out Sucessfully!"
+        # Check if the provided code permit exists in the database
+        command_check_code_permit = f"SELECT * FROM vehicle_data WHERE code_permit = '{code_permit}'"
+        result = conn.execute(command_check_code_permit).fetchone()
+        
+        if result:  # If code permit exists
+            command = f'''
+            UPDATE vehicle_data
+            SET checked_out = DATETIME('now')
+            WHERE code_permit = '{code_permit}'
+            '''
+            conn.execute(command)
+            conn.commit()
+            return "Check Out Successfully!"
+        else:  # If code permit doesn't exist
+            return "Code Permit not found!"
     except sqlite3.Error as e:
         return f"Error updating data: {e}"
+
 
 # Function to perform search operation
 def search(license_plate=''):
