@@ -74,7 +74,7 @@ def check_in(vehicle_type, vehicle_model, license_plate):
         code_permit = generate_random_code()  # Generate a random code
         command = f'''
         INSERT INTO vehicle_data (code_permit, vehicle_type, vehicle_model, license_plate, checked_in)
-        VALUES ('{code_permit}', '{vehicle_type}', {vehicle_model}, '{license_plate}', DATETIME('now'))
+        VALUES ('{code_permit}', '{vehicle_type}', '{vehicle_model}', '{license_plate}', DATETIME('now', '+07:00'))
         '''
         conn.execute(command)
         conn.commit()
@@ -97,7 +97,7 @@ def check_out(code_permit):
         if result:  # If code permit exists
             command = f'''
             UPDATE vehicle_data
-            SET checked_out = DATETIME('now')
+            SET checked_out = DATETIME('now', '+07:00')
             WHERE code_permit = '{code_permit}'
             '''
             conn.execute(command)
@@ -126,7 +126,7 @@ def subscription(member_name, member_license_plate, member_vehicle_model, member
     try:
         command = f'''
         INSERT INTO members (member_name, member_license_plate, member_vehicle_model, member_vehicle_type, paid)
-        VALUES ('{member_name}', '{member_license_plate}', {member_vehicle_model}, '{member_vehicle_type}', {paid})
+        VALUES ('{member_name}', '{member_license_plate}', '{member_vehicle_model}', '{member_vehicle_type}', {paid})
         '''
         conn.execute(command)
         conn.commit()
@@ -308,6 +308,64 @@ paid_combobox.set("True")  # Set default value to True
 
 subscribe_button = ttk.Button(subscribe_frame, text="Subscribe", command=subscribe_member)
 subscribe_button.grid(row=5, columnspan=2, padx=5, pady=5)
+
+
+
+
+import win32print
+import win32ui 
+import win32con
+
+# Function to print information
+def print_information(vehicle_type, vehicle_model, license_plate, code_permit, check_in_date):
+    printer_name = win32print.GetDefaultPrinter()  # Get the default printer
+    hprinter = win32print.OpenPrinter(printer_name)
+    hdc = win32ui.CreateDC()
+    hdc.CreatePrinterDC(printer_name)
+    hdc.StartDoc("Vehicle Information")
+    hdc.StartPage()
+
+    # Set font and text size
+    hdc.SetMapMode(win32con.MM_TWIPS)
+    font = win32ui.CreateFont({
+        "name": "Arial",
+        "height": 200,  # Font size in twips (1/20th of a point)
+        "weight": 400,  # Normal weight
+    })
+    hdc.SelectObject(font)
+
+    # Define text to print
+    text_to_print = f"Vehicle Type: {vehicle_type}, Vehicle Model: {vehicle_model}, License Plate: {license_plate}, Code Permit: {code_permit}, Check-in Date: {check_in_date}"
+
+        
+    hdc.TextOut(1, 1, text_to_print)
+
+    hdc.EndPage()
+    hdc.EndDoc()
+    hdc.DeleteDC()
+    win32print.ClosePrinter(hprinter)
+
+
+
+def print_check_in_info():
+    license_plate = license_plate_entry.get()
+    
+    # Fetch all information from the database based on the license plate
+    command_fetch_info = f"SELECT * FROM vehicle_data WHERE license_plate = '{license_plate}'"
+    info_result = conn.execute(command_fetch_info).fetchone()
+    
+    if info_result:
+        vehicle_type = info_result[1]
+        vehicle_model = info_result[2]
+        license_plate = info_result[3]
+        code_permit = info_result[4]
+        check_in_date = info_result[5]
+        print_information(vehicle_type, vehicle_model, license_plate, code_permit, check_in_date)
+    else:
+        messagebox.showerror("Error", "No information found for the given license plate")
+
+print_button = ttk.Button(check_in_frame, text="Print Check-in Info", command=print_check_in_info)
+print_button.grid(row=4, columnspan=2, padx=5, pady=5)
 
 
 
