@@ -38,7 +38,7 @@ def initialize_database():
         CREATE TABLE IF NOT EXISTS members (
             member_No INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             member_name CHAR(50) NOT NULL,
-            member_vehicle_model INTEGER NOT NULL,
+            member_vehicle_model CHAR(50) NOT NULL,
             member_vehicle_type CHAR(50) NOT NULL,
             member_license_plate CHAR(10) NOT NULL,         
             paid BOOLEAN,
