@@ -27,7 +27,7 @@ def initialize_database():
             vehicle_No INTEGER PRIMARY KEY AUTOINCREMENT,
             vehicle_type CHAR(50) NOT NULL,
             vehicle_model CHAR(50),
-            License_plate CHAR(10) NOT NULL,
+            License_plate CHAR(10) NOT NULL CHECK (License_plate <> ''),
             code_permit CHAR(8) NOT NULL,
             checked_in DATETIME,
             checked_out DATETIME,
@@ -37,10 +37,10 @@ def initialize_database():
         
         CREATE TABLE IF NOT EXISTS members (
             member_No INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            member_name CHAR(50) NOT NULL,
-            member_vehicle_model CHAR(50) NOT NULL,
-            member_vehicle_type CHAR(50) NOT NULL,
-            member_license_plate CHAR(10) NOT NULL,         
+            member_name CHAR(50) NOT NULL CHECK (member_name <> ''),
+            member_vehicle_model CHAR(50) NOT NULL CHECK (member_vehicle_model <> ''),
+            member_vehicle_type CHAR(50) NOT NULL CHECK (member_vehicle_type <> ''),
+            member_license_plate CHAR(10) NOT NULL CHECK (member_license_plate <> ''),         
             paid BOOLEAN,
             FOREIGN KEY (member_license_plate) REFERENCES vehicle_data(license_plate)
         );        
@@ -81,9 +81,7 @@ def check_in(vehicle_type, vehicle_model, license_plate):
         return "Check In Sucessfully!"
     except sqlite3.Error as e:
         return f"Error inserting data: {e}"
-###
 
-###
 
 
 # Function to perform check-out operation
@@ -118,7 +116,7 @@ def search(license_plate=''):
     else:
         # command = f"SELECT * FROM vehicle_data"
         # result = conn.execute(command)
-        return "Not Found"
+        return "None"
 
 
 # Function to perform subscription operation
@@ -173,6 +171,7 @@ def check_in_vehicle():
     license_plate = license_plate_entry.get()
     result = check_in(vehicle_type, vehicle_model, license_plate)
     messagebox.showinfo("Check-in Status", result)
+    
 
 # Create a dropdown for selecting vehicle type
 vehicle_type_label = ttk.Label(check_in_frame, text="Vehicle Type:")
@@ -220,7 +219,7 @@ def search_vehicle():
     search_result_window = tk.Toplevel(root)
     search_result_window.title("Search Result")
     
-    if result == "Not Found":
+    if result == "None":
         # Retrieve all data from the database
         command = "SELECT * FROM vehicle_data"
         all_data = conn.execute(command).fetchall()
@@ -239,7 +238,7 @@ def search_vehicle():
 
         # Insert all data into the table
         for row in all_data:
-            tree.insert("", "end", values=row[:])  # Skip the first element (index column)
+            tree.insert("", "end", values=row[:])  
         tree.pack(expand=True, fill="both")
     else:
         # Create a Treeview widget to display the search result in a table format
