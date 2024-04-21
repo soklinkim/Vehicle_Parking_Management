@@ -106,17 +106,21 @@ def check_out(code_permit):
     except sqlite3.Error as e:
         return f"Error updating data: {e}"
 
+# Function to perform search vehicle operation
 
-# Function to perform search operation
 def search(license_plate=''):
     if license_plate != '':
         command = f"SELECT * FROM vehicle_data WHERE license_plate = '{license_plate}'"
-        result = conn.execute(command)
-        return result.fetchone()
+        result = conn.execute(command).fetchall()
+        if result:
+            return result
+        else:
+            return "Not found"
     else:
-        # command = f"SELECT * FROM vehicle_data"
-        # result = conn.execute(command)
-        return "None"
+        command = f"SELECT * FROM vehicle_data"
+        result = conn.execute(command).fetchall()
+        return result
+
 
 
 # Function to perform subscription operation
@@ -209,8 +213,8 @@ check_out_button = ttk.Button(check_out_frame, text="Check-out", command=check_o
 check_out_button.grid(row=1, columnspan=2, padx=5, pady=5)
 
 
+# GUI for Search page
 
-# Function for search page
 def search_vehicle():
     license_plate = license_plate_search_entry.get()
     result = search(license_plate)
@@ -219,44 +223,29 @@ def search_vehicle():
     search_result_window = tk.Toplevel(root)
     search_result_window.title("Search Result")
     
-    if result == "None":
-        # Retrieve all data from the database
-        command = "SELECT * FROM vehicle_data"
-        all_data = conn.execute(command).fetchall()
-        
-        # Create a Treeview widget to display all data in a table format
-        tree = ttk.Treeview(search_result_window, show="headings")
-        tree["columns"] = ("Vehicle No.", "Vehicle Type", "Vehicle Model", "License Plate", "Code_Permit", "Checked In", "Checked Out", "Member")
-        tree.heading("Vehicle No.", text="Vehicle No.")
-        tree.heading("Vehicle Type", text="Vehicle Type")
-        tree.heading("Vehicle Model", text="Vehicle Model")
-        tree.heading("License Plate", text="License Plate")
-        tree.heading("Code_Permit", text="Code_Permit")
-        tree.heading("Checked In", text="Checked In")
-        tree.heading("Checked Out", text="Checked Out")
-        tree.heading("Member", text="Member")
+    if result != "Not found":
+        if result:
+            # Create a Treeview widget to display the search result in a table format
+            tree = ttk.Treeview(search_result_window, show="headings")
+            tree["columns"] = ("Vehicle No.", "Vehicle Type", "Vehicle Model", "License Plate", "Code_Permit", "Checked In", "Checked Out", "Member")
+            tree.heading("Vehicle No.", text="Vehicle No.")
+            tree.heading("Vehicle Type", text="Vehicle Type")
+            tree.heading("Vehicle Model", text="Vehicle Model")
+            tree.heading("License Plate", text="License Plate")
+            tree.heading("Code_Permit", text="Code_Permit")
+            tree.heading("Checked In", text="Checked In")
+            tree.heading("Checked Out", text="Checked Out")
+            tree.heading("Member", text="Member")
 
-        # Insert all data into the table
-        for row in all_data:
-            tree.insert("", "end", values=row[:])  
-        tree.pack(expand=True, fill="both")
+            # Insert the search result into the table
+            for row in result:
+                tree.insert("", "end", values=row)
+            tree.pack(expand=True, fill="both")
     else:
-        # Create a Treeview widget to display the search result in a table format
-        tree = ttk.Treeview(search_result_window, show="headings")
-        tree["columns"] = ("Vehicle No.", "Vehicle Type", "Vehicle Model", "License Plate", "Code_Permit", "Checked In", "Checked Out", "Member")
-        tree.heading("Vehicle No.", text="Vehicle No.")
-        tree.heading("Vehicle Type", text="Vehicle Type")
-        tree.heading("Vehicle Model", text="Vehicle Model")
-        tree.heading("License Plate", text="License Plate")
-        tree.heading("Code_Permit", text="Code_Permit")
-        tree.heading("Checked In", text="Checked In")
-        tree.heading("Checked Out", text="Checked Out")
-        tree.heading("Member", text="Member")
+        # Show a messagebox indicating "Not found"
+        messagebox.showinfo("Search Result", "Not found")
 
-        # Insert the search result into the table
-        tree.insert("", "end", values=result)
-        tree.pack(expand=True, fill="both")
-        
+
 # Button    
 license_plate_search_label = ttk.Label(search_frame, text="License Plate:")
 license_plate_search_label.grid(row=0, column=0, padx=5, pady=5)
@@ -267,7 +256,8 @@ search_button = ttk.Button(search_frame, text="Search", command=search_vehicle)
 search_button.grid(row=1, columnspan=2, padx=5, pady=5)
 
 
-# Function for subscription page
+
+# GUI for subscription page
 def subscribe_member():
 
     member_name = member_name_entry.get()
