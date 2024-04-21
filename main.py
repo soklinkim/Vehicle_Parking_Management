@@ -131,11 +131,11 @@ def subscription(member_name, member_license_plate, member_vehicle_model, member
         conn.execute(command)
         conn.commit()
         
-        # Update the vehicle_data table to set member field to 1 for the corresponding license_id
+        # Update the vehicle_data table to set member field to 1 for the corresponding license_plate
         command_update_vehicle = f'''
         UPDATE vehicle_data
         SET member = 1
-        WHERE license_id = '{member_license_plate}'
+        WHERE license_plate = '{member_license_plate}'
         '''
         conn.execute(command_update_vehicle)
         conn.commit()
