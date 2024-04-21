@@ -68,19 +68,35 @@ def generate_random_code(length=8):
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for _ in range(length))
 
+
 # Function to perform check-in operation
 def check_in(vehicle_type, vehicle_model, license_plate):
     try:
         code_permit = generate_random_code()  # Generate a random code
         command = f'''
-        INSERT INTO vehicle_data (code_permit, vehicle_type, vehicle_model, license_plate, checked_in)
-        VALUES ('{code_permit}', '{vehicle_type}', '{vehicle_model}', '{license_plate}', DATETIME('now', '+07:00'))
+        INSERT INTO vehicle_data (code_permit, vehicle_type, vehicle_model, license_plate, checked_in, member)
+        VALUES ('{code_permit}', '{vehicle_type}', '{vehicle_model}', '{license_plate}', DATETIME('now', '+07:00'), 0)
         '''
         conn.execute(command)
         conn.commit()
-        return "Check In Sucessfully!"
+        
+        # Check if the provided license plate exists in the members table
+        command_check_member = f"SELECT * FROM members WHERE member_license_plate = '{license_plate}'"
+        member_result = conn.execute(command_check_member).fetchone()
+        if member_result:  # If the license plate exists in members
+            # Update the vehicle_data table to set member field to 1 for the corresponding license_plate
+            command_update_member = f'''
+            UPDATE vehicle_data
+            SET member = 1
+            WHERE license_plate = '{license_plate}'
+            '''
+            conn.execute(command_update_member)
+            conn.commit()
+        
+        return "Check In Successfully!"
     except sqlite3.Error as e:
         return f"Error inserting data: {e}"
+
 
 
 
@@ -100,7 +116,7 @@ def check_out(code_permit):
             '''
             conn.execute(command)
             conn.commit()
-            return "Check Out Successfully!"
+            return f" {result} Check Out Successfully!"
         else:  # If code permit doesn't exist
             return "Code Permit not found!"
     except sqlite3.Error as e:
